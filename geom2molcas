@@ -1,0 +1,192 @@
+#!/usr/bin/perl -w
+#
+# Convert XYZ/NX/COLUMBUS -> molcas
+# Usage: "geom2molcas option1 [option2] <ENTER>"
+# option1 = xyz         - xyz -> MOLCAS asking the name of the input file
+#         = col         - NX/COLUMBUS -> MOLCAS asking the name of the input file 
+#         = defxyz      - xyz -> MOLCAS assuming default name geom.molden
+#         = defcol      - NX/COLUMBUS -> MOLCAS assuming default name geom
+# option2 = r           - reorder atoms to group by atom type
+#         = nr          - keep original order
+# Mario Barbatti, Sept 2007
+#
+
+# Defaults section:
+$def_name_xyz="geom.molden";
+$def_name_col="geom";
+$out_file ="geom.molcas";
+$xyztemp = "xyz.temp";
+
+input_name();
+
+read_input();
+
+write_output();
+
+system("rm -rf $xyztemp");
+
+# END OF MAIN PROGRAM
+
+#................................................................
+sub input_name{
+ if    ($ARGV[0] eq "xyz"){
+   print " Converting xyz -> MOLCAS \n";
+   print " Name of the xyz file (default $def_name_xyz): ";
+   name_of_file($def_name_xyz);
+ }elsif($ARGV[0] eq "col"){
+   print " Converting NX/COLUMBUS -> MOLCAS \n"; 
+   print " Name of the NX/COLUMBUS file (default $def_name_col): ";
+   name_of_file($def_name_col);
+ }elsif($ARGV[0] eq "defxyz"){
+   print " Converting xyz -> MOLCAS \n";
+   print " Assuming default name $def_name_xyz \n";
+   $name = $def_name_xyz;
+ }elsif($ARGV[0] eq "defcol"){
+   print " Converting NX/COLUMBUS -> MOLCAS \n";
+   print " Assuming default name $def_name_col \n";
+   $name = $def_name_col;
+ }else{
+   error_message();
+ }
+ if    ($ARGV[1] eq "nr"){
+   print " Atomic order will be kept \n";
+ }elsif($ARGV[1] eq "r"){
+   print " Atoms will be reordered \n";
+ }else{
+   error_message();
+ }
+}
+#................................................................
+sub error_message{
+   print " Missing or unknown options: option1 = $ARGV[0]  option2 = $ARGV[1]\n";
+   print " Usage: \"geom2molcas option1 [option2] <ENTER>\"\n";
+   print " option1 = xyz         - xyz -> MOLCAS asking the name of the input file\n";
+   print "         = col         - NX/COLUMBUS -> MOLCAS asking the name of the input file\n";
+   print "         = defxyz      - xyz -> MOLCAS assuming default name geom.molden\n";
+   print "         = defcol      - NX/COLUMBUS -> MOLCAS assuming default name geom\n";
+   print " option2 = r           - reorder atoms to group by atom type\n";
+   print "         = nr          - keep original order of atoms\n";
+   die;
+}
+#................................................................
+sub name_of_file{
+  ($name_def)=@_;
+  $_=<STDIN>;
+  chomp;
+  $_ =~ s/^\s*//;         # remove leading blanks
+  $_ =~ s/\s*$//;         # remove trailing blanks
+  if ($_  eq ""){
+    $name = $name_def;
+  }else{
+    $name = $_;
+  }
+}
+#................................................................
+sub read_input{
+ if ($ARGV[0]=~/col/){
+   geom2xyz();
+ }else{
+   system("cp -f $name $xyztemp");
+ }
+ # read xyz.temp
+ open(XT,"$xyztemp") or die ":( $xyztemp";
+ $_=<XT>;
+ chomp;
+ $_ =~ s/^\s*//;         # remove leading blanks
+ $_ =~ s/\s*$//;         # remove trailing blanks
+ $natom = $_;
+ $_=<XT>;
+ for ($i=1;$i<=$natom;$i++){
+  $_=<XT>;
+  chomp;
+  $_ =~ s/^\s*//;         # remove leading blanks
+  $_ =~ s/\s*$//;         # remove trailing blanks
+  ($s[$i],$x[$i],$y[$i],$z[$i])=split(/\s+/,$_);
+  $s[$i]=uc($s[$i]);      # Capitalize symbol 
+  kind_symbol();
+ }
+ for ($i=1;$i<=$natom;$i++){
+  foreach(@kind){
+    if ($s[$i] eq $_){
+      $m=$ind{$_};
+      $sn[$i]=$s[$i].$m;
+      $ind{$_}++;
+    }
+  }
+ }
+}
+#................................................................
+sub kind_symbol{
+# vector $kind contains each of different symbols
+  $kind[0]=0;
+  if ($i == 1){
+    $k = 1;
+    $kind[$k]=$s[$i];
+    $ind{$kind[$k]}=1;
+  }else{
+    $compare = "new";
+    for ($j=1;$j<=$i-1;$j++){
+      if ($s[$i] eq $s[$j]){
+        $compare = "repeated";
+        last;
+      }
+    }
+    if ($compare eq "new"){
+       $k++;
+       $kind[$k]=$s[$i];
+       $ind{$kind[$k]}=1;
+    }
+  }
+}
+#................................................................
+sub geom2xyz{
+   $au2ang=0.529177;
+   $file=$name;
+   open (FILE, $file) or die "Failed to open file: $file\n";
+   $i=0;
+   while (<FILE>)
+    {
+      $i++;
+      chomp; 
+      $_ =~ s/^\s*//;         # remove leading blanks
+      $_ =~ s/\s*$//;         # remove trailing blanks
+      ($symbol[$i],$charge[$i],$x[$i],$y[$i],$z[$i])=split(/\s+/,$_); 
+      $charge[$i]=$charge[$i];
+      $natom=$i; 
+    }
+    open (OUT,">$xyztemp")or die" Failed to open file: $xyztemp\n";  
+    print {OUT}" $natom\n\n";
+    for ($i=1; $i<=$natom; $i++)
+    {
+      $x[$i]=$x[$i]*$au2ang;
+      $y[$i]=$y[$i]*$au2ang;
+      $z[$i]=$z[$i]*$au2ang;
+      printf {OUT}("%7s  %15.6f  %15.6f   %15.6f\n", $symbol[$i],$x[$i],$y[$i],$z[$i]);
+    }
+   close OUT;
+   close FILE;
+}
+#................................................................
+sub write_output{ 
+  open (OUT,">$out_file")or die" Failed to open file: $out_file\n";  
+  if ($ARGV[1] eq"r"){
+    foreach(@kind){ 
+      for ($i=1;$i<=$natom;$i++){
+        if ($s[$i] eq $_){
+          printf OUT "%7s  %15.6f  %15.6f   %15.6f  / Angstrom\n",$sn[$i],$x[$i],$y[$i],$z[$i];
+        }
+      }
+    }
+  }elsif ($ARGV[1] eq "nr"){
+    for ($i=1;$i<=$natom;$i++){
+       foreach(@kind){
+         if ($s[$i] eq $_){
+           printf OUT "%7s  %15.6f  %15.6f   %15.6f / Angstrom\n",$sn[$i],$x[$i],$y[$i],$z[$i];
+         }
+       }
+    }
+  }
+  close(OUT);
+  print " Output written to geom.molcas\n";
+}
+#................................................................

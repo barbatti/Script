@@ -1,0 +1,121 @@
+#!/bin/sh
+# $Revision: 7.4 Patch(7.4): 022_driver 026_explain $
+# 
+#  Molcas driver shell script version 2.1
+#
+
+if [ -f .molcashome ] ; then
+MOLCAS=`pwd`
+elif [ -f ../.molcashome ] ; then
+MOLCAS=`cd ..; pwd`
+elif [ -f ../../.molcashome ] ; then
+MOLCAS=`cd ../..; pwd`
+elif [ -f ../../../.molcashome ] ; then
+MOLCAS=`cd ../../..; pwd`
+fi
+
+if [ -z "$MOLCAS" ] ; then
+ if [ -f "$HOME/.molcas" ] ; then
+   MOLCAS=`cat $HOME/.molcas`
+ fi
+fi
+
+export MOLCAS
+
+if [ -f "$MOLCAS/src/Driver/molcas.rc.in" ]; then
+ RUN=$MOLCAS/shell/molcas.shell
+else
+ RUN=$MOLCAS/sbin/molcas.plx
+fi
+if [ -x "$RUN" ] ; then
+ if [ ! -f "$MOLCAS/sbin/molcas.driver" ]; then
+   $RUN $*
+   exit $?
+ fi
+ ff=`echo $1| sed -e 's/\///'`
+ if [ -n "$1" ] && [ -x "$MOLCAS/sbin/$1" ] && [ "$1" = "$ff" ]
+ then 
+  $MOLCAS/sbin/$*
+  exit $?
+ fi
+ if [ "$1" = 'gv' ] || [ "$1" = 'gui' ] || [ "$1" = 'ming' ] || [ "$1" = 'molgui' ] || [ "$1" = 'simple' ]
+ then 
+  $RUN $*
+  exit $?
+ fi
+ if [ -z "$1" ]
+ then
+   $RUN
+   exit 0
+ fi
+ LOGF=''
+ LOGE=''
+ LOGS=''
+ MYARG=''
+ MYFLAGS=''
+ 
+  while :
+  do
+    MYOPT=$1
+      if [ -z "$MYOPT" ] ; then
+         break
+      fi
+      case $MYOPT in
+        -o )  shift 1
+	       LOGF=$1
+	       shift 1
+	       ;;
+	-e )  shift 1
+	       LOGE=$1
+	       shift 1
+	       ;;
+	-f ) shift 1
+	       LOGS=1
+	       ;;
+	-*)  shift 1;
+	       MYFLAGS=$MYFLAGS' '$MYOPT
+	       ;;       
+          *) MYARG=$MYARG' '$MYOPT
+	       shift
+	       ;; 
+      esac	       
+  done
+  
+  
+  if [ -n "$LOGF" ] 
+   then
+    if [ "$LOGF" = "$LOGE" ]
+      then
+        $RUN $MYARG $MYFLAGS >$LOGF 2>&1
+	exit $?
+    else
+        if [ -z "$LOGE" ]; then
+	 $RUN $MYARG $MYFLAGS >$LOGF 
+	 exit $?
+	else
+         $RUN $MYARG $MYFLAGS >$LOGF 2>$LOGE
+	 exit $?
+	fi
+    fi  
+  fi
+
+  if [ "$LOGS" = '1' ]
+  then
+     FILE=`$MOLCAS/sbin/getname.plx $MYARG`
+     $RUN $MYARG $MYFLAGS >$FILE.log 2>$FILE.err
+     exit $?
+  fi
+  $RUN $MYARG $MYFLAGS
+  exit $?
+else
+ if [ -f "$MOLCAS/sbin/$1" ]
+ then 
+  $MOLCAS/sbin/$*
+ else 
+   echo "***"
+   echo "*** Error: Could not find molcas installation"
+   echo "*** Currently MOLCAS=$MOLCAS"
+   exit 1
+  fi 
+fi
+exit

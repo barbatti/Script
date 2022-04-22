@@ -1,0 +1,5 @@
+for dir in */
+do
+  base=$(basename "$dir")
+  tar -czf "${base}.tar.gz" "$dir"
+done

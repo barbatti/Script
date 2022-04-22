@@ -1,0 +1,10 @@
+#! /bin/sh
+# molcas.KSH $Revision: 6.4 Patch(6.4): 019_sync $
+#****************************************************************************
+#
+# MOLCAS top level script
+#
+#----------------------------------------------------------------------------
+# $MOLCAS/sbin/molcas.plx $*
+/usr/users/barbatti/bin/molcas
+exit $?

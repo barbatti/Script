@@ -1,0 +1,14 @@
+set border linewidth 2
+set rmargin 5
+set lmargin 10
+set tmargin 5
+set bmargin 7
+set xtics font "Arial, 25" offset 0,-0.5
+set ytics font "Arial, 25" 
+set xlabel "Time (fs)" font "Arial, 30" offset 0,-2 
+set ylabel "Energy (eV)" font "Arial, 30" offset -1.5,0
+set pointsize 2.5
+plot [t=0:5] 'data.dat' u 1:2 title '' w lines lw 3, 'data.dat' u 1:3 title '' w lines lw 3,'data.dat' u 1:4 title '' w lines lw 3, 'data.dat' u 1:5 title '' w lines lw 3,'data.dat' u 1:6 title '' w lines lw 3,'data.dat' u 1:7 title '' w lines lw 3,'data.dat' u 1:8 title '' w lines lw 3,'data.dat' u 1:9 title '' w lines lw 3,'data.dat' u 1:10 title '' w lines lw 3,'data.dat' u 1:11 title '' w lines lw 3,'data.dat' u 1:12 title '' w lines lw 3,'data.dat' u 1:13 title '' w lines lw 3,'data.dat' u 1:14 title '' w lines lw 3,'data.dat' u 1:15 title '' w lines lw 3,'data.dat' u 1:16 title '' w lines lw 3,'data.dat' u 1:17 title '' w lines lw 3,'data.dat' u 1:18 title '' w points 20
+set output "f.png"
+set terminal png size 900,632
+replot 

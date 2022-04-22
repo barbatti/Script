@@ -1,0 +1,71 @@
+#!/usr/bin/perl -w
+
+#Jaroslaw Szymczak Dec 2006
+print "\nThis script plots energy profiles of all ineeded trajectories \n";
+print "It store all of the pictures in the directory TPLOTS \n";
+print "Please run it from directory with Trajectories \n\n" ;
+
+print "Enter the number of states:                      ";
+$_=<STDIN>;
+chomp;
+$nstat=$_;
+
+print "Enter the number of the initial trajectory:      ";
+$_=<STDIN>;
+chomp;
+$init=$_;
+
+print "Enter the number of the final trajectory:        ";
+$_=<STDIN>;
+chomp;
+$imax=$_;
+
+print "Would you like to set initial and final times? (press y to set) ";
+$_=<STDIN>;
+chomp;
+$ans_time=$_;
+
+if ($ans_time=~ /^y/i){
+  print "Enter the initial time for analysis (fs):        ";
+  $_=<STDIN>;
+  chomp;
+  $tini=$_;
+  print "Enter the final time for analysis (fs):          ";
+  $_=<STDIN>;
+  chomp;
+  $tend=$_;
+  $ime="[$tini,$tend]";
+}else{
+  $time="";
+}
+
+$file = "def-gp";
+open (FILE, ">$file") or die "Cannot open $file to write!";
+print FILE "set xlabel \"Time (fs)\" \n set ylabel \"Energy (au)\" \n ";
+print FILE "plot $time ";
+for ($n=2;$n<=$nstat+1;$n++){
+  print FILE "'en.dat' using 1:$n title '' with lines lw 8, ";
+}
+$n=$n++;
+print FILE "'en.dat' using 1:$n title '' with points ps 2 \n";
+print FILE "set output \"f.ps\" \n";
+print FILE "set terminal postscript eps enhanced solid color blacktext \"Helvetica\" 28 \n"; 
+print FILE "set size 2.0,2.0 \n";
+print FILE "replot";
+close(File);
+# ...................
+# ...................
+
+system("/bin/mkdir -p TPLOTS");
+for ($i=$init;$i<=$imax;$i++){
+  $dir="TRAJ$i/RESULTS";
+  chdir("$dir");
+  system("cp -f ../../$file .");
+  system("gnuplot $file");
+  system("convert f.ps g.gif");
+  system("mv g.gif ../../TPLOTS/f-$i.gif");
+  system("rm -f f.ps");
+  system("rm -f $file");
+  chdir("../../");
+}
+system("rm -f def-gp");

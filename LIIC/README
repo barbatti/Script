@@ -1,0 +1,35 @@
+LIIC
+Mario Barbatti, Jul 2006.
+
+LIIC program makes linear interpolation of internal
+coordinates and return the cartesian geometries.
+
+liic.pl - main driver
+liic2.pl - alternative program
+liic.f90 - makes the interpolation
+cart2int.f - Columbus program to make the 
+coordinate transformation.
+
+The difference between liic and liic2 is the way of 
+managing the internal coordinates. liic uses 
+the actual set of internal coordinates (geomch = 0 
+in cart2int) while liic2 uses the the internal 
+coordinates increment (geomch = 1 in cart2int).
+
+For some reason, that i couldn't understand, liic2 works
+better than liic.
+
+INPUT:
+geom.ini  : initial cartesian geometry, Columbus format
+geom.last : final cartesian geometry, Columbus format
+intcfl    : internal coordinates definition, Columbus format 
+
+RUN:
+liic.pl (liic2.pl) in the directory containing the input files.
+
+The variable COLUMBUS should be defined in the environment.
+
+Known bugs:
+The program doesn't run adequately under certain 
+Columbus compilations.
+ 

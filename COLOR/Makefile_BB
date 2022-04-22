@@ -1,0 +1,18 @@
+LIBNAME=spec.a
+PROG=blackbody
+
+CC=gcc
+CFLAGS= -O3 -g
+LIBS=-lm
+
+all: spec.a ${PROG}
+
+spec.a: spec.c
+	${CC} -c -o ${LIBNAME} ${LIBS} spec.c 
+
+${PROG}: spec.a blackbody.c
+	${CC} ${CFLAGS} -o ${PROG} ${LIBS} ${LIBNAME} blackbody.c
+
+
+clean:
+	rm spec.a ${PROG}

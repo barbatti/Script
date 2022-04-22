@@ -1,0 +1,27 @@
+===================================================================================
+ MOCOEF2INPORB
+ This program converts a mocoef (COLUMBUS) file into a INPORB (MOLCAS).
+ Mario Barbatti, April 2009.
+
+ Valid only for C1 symmetry. 
+ Work only with s, p, and d functions.
+
+ Input:
+ Number of atoms
+ contracted s for atom 1, contracted p for atom 1, contracted d for atom 1
+ ...
+ contracted s for atom Nat, contracted p for atom Nat, contracted d for atom Nat
+
+ Example: C2H4 with 6-31G*
+ In a directory containing the mocoef file:
+ 1) Create file moc2inp with:
+ 6
+ 3 2 1
+ 3 2 1
+ 2 0 0
+ 2 0 0
+ 2 0 0
+ 2 0 0
+ 2) Run mocoef2inporb.pl < moc2inp > moc2inp.log
+ Results are written to INPORB file.
+===================================================================================
